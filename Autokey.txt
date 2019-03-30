@@ -1,0 +1,204 @@
+
+import java.util.Scanner;
+
+
+public class AutoKey {
+    static Scanner sc = new Scanner(System.in);
+    static char grid[][] = new char[26][26];
+    public static void main(String[] args) {
+        System.out.println("Enter the Input");
+        String plainText = sc.nextLine();
+        plainText = preprocess(plainText);
+        System.out.println("After Preprocess : " + plainText);
+        System.out.println("\nEnter the Key");
+        String key = sc.next();
+        key = key.toLowerCase();
+        makeGrid();
+        System.out.println("\nEncrypted Message : ");
+        String cipherText = Encrypt(plainText, key);
+        System.out.println(cipherText);
+        System.out.println("\nDecryption Message : ");
+        System.out.println(Decrypt(cipherText, key));
+    }
+  
+    static String Encrypt(String plainText, String key)
+    {
+        String Encrypt = key + plainText;
+        char EncInChar[] = Encrypt.toCharArray();
+        char plainInChar[] = plainText.toCharArray();
+        char result[] = new char[plainInChar.length];
+        for(int i=0;i<plainInChar.length;i++)
+        {
+            result[i] = grid[plainInChar[i] - 'a'][EncInChar[i] - 'a'];
+        }
+        
+        return new String(result);
+    }
+    
+    static String Decrypt(String cipherText, String key)
+    {
+        char result[] = new char[cipherText.length()] ;
+        char cipher[] = cipherText.toCharArray();
+        String keyStrem = key;
+        char keyInChar[] = key.toCharArray();
+        
+        for(int i=0;i<cipher.length;i++)
+        {
+            for(int j = 0;j<26;j++)
+            {
+                if(grid[j][keyInChar[i] - 'a'] == cipher[i])
+                {
+                    result[i] = (char)(j + 'a');
+                    keyStrem = keyStrem + (char)(j + 'a') ;
+                    break;
+                }
+            }
+            keyInChar = keyStrem.toCharArray();
+        }
+        return new String(result);
+    }
+    
+    static String preprocess(String plainText)
+    {
+        int i = 0;
+        char ch[] = plainText.toCharArray();
+        for(char c: ch )
+        {
+            if(Character.isUpperCase(c))
+            {
+                ch[i] = Character.toLowerCase(c);
+            }
+            if(!Character.isAlphabetic(c))
+            {
+                ch[i] = ' ';
+            }
+                
+            i++;
+        }
+        return new String(ch).replace(" ", "");
+    }
+    
+    static void makeGrid()
+    {
+        char c[] = new char[26];
+        char ch = 'a';
+        for(int i=0;i<26;i++)
+        {
+            c[i] = ch;
+            ch++;
+        }
+        int m;
+        for(int i = 0;i<26;i++)
+        {
+            m = i;
+            for(int j = 0;j< 26;j++)
+            {
+                grid[i][j] = c[m];
+                m = (m + 1)%26;
+            }
+        }
+        
+      
+    }
+    
+    static void printGrid()
+    {
+          for(int i = 0;i<26;i++)
+        {
+            for(int j = 0;j< 26;j++)
+            {
+                System.out.print(grid[i][j] + "  ");
+            }
+            System.out.println("");
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import java.util.Scanner;
+
+
+public class AutoKey2 {
+     static Scanner sc = new Scanner(System.in);
+    public static void main(String[] args) {
+        System.out.println("Enter the Input");
+        String plainText = sc.nextLine();
+        plainText = preprocess(plainText);
+        System.out.println("After Preprocess : " + plainText);
+        System.out.println("\nEnter the Key");
+        int key = sc.nextInt();
+        System.out.println("\nEncrypted Message : ");
+        String cipherText = Encrypt(plainText, key);
+        System.out.println(cipherText);
+        System.out.println("\nDecryption Message : ");
+        //System.out.println(Decrypt(cipherText, key));
+    }
+    
+    static String Encrypt(String plainText,int key)
+    {
+        char c[] = new char[26];
+        char ch = 'a';
+        for(int i=0;i<26;i++)
+        {
+            c[i] = ch;
+            ch++;
+        }
+        
+        char result[] = new char[plainText.length()];
+        char plainInChar[] = plainText.toCharArray();
+        char keyStream[] = new char[plainInChar.length];
+        for(int i = 0;i<plainInChar.length;i++)
+        {
+            if(i == 0)
+                keyStream[i] = (char)('a' + (14)%26);
+            else
+                keyStream[i] = plainInChar[i-1];
+        }
+        
+        for(int i=0;i<plainInChar.length;i++)
+        {
+            result[i] = (char)((((int)(plainInChar[i]-'a') + (int)(keyStream[i] - 'a')) % 26 ) + 'a');
+        }
+        
+        return new String(result);
+    }
+    
+    static String preprocess(String plainText)
+    {
+        int i = 0;
+        char ch[] = plainText.toCharArray();
+        for(char c: ch )
+        {
+            if(Character.isUpperCase(c))
+            {
+                ch[i] = Character.toLowerCase(c);
+            }
+            if(!Character.isAlphabetic(c))
+            {
+                ch[i] = ' ';
+            }
+                
+            i++;
+        }
+        return new String(ch).replace(" ", "");
+    }
+}

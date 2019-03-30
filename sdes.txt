@@ -1,0 +1,348 @@
+import java.util.*;
+public class ISPractical4
+{
+staticString[][]s0={{"01","00","11","10"},{"11","10","01","00"},{"00","10","01","11"},{"1
+1","01","11","10"}};
+staticString[][]s1={{"00","01","10","11"},{"10","00","01","11"},{"11","00","01","00"},{"1
+0","01","00","11"}};
+static int[] p4={2,4,3,1};
+static int[] ep={4,1,2,3,2,3,4,1};
+static int[] ip={2,6,3,1,4,8,5,7};
+static int[] ip_inverse={4,1,3,5,7,2,8,6};
+static int[] p10={3,5,2,7,4,10,1,9,8,6};
+static int[] p8={6,3,7,4,8,5,10,9};
+static String initialization_vector="10001000";
+static String initialization_vector_decryption;
+public static void main(String[] args) {
+// TODO code application logic here
+Scanner sc=new Scanner(System.in);
+/////24 bit input
+System.out.println("Enter the plaintext: ");
+String input_text=sc.next();
+int number_of_blocks=ceiling_function(input_text);
+String block;
+int padding=(8*number_of_blocks)-input_text.length();
+for(int i=1;i<=padding;i++)
+input_text=input_text+"0";
+System.out.println("HOW MUCH PADDING: "+padding);
+System.out.println("INPUT TEXT AFTER PADDING: "+input_text);
+initialization_vector_decryption=initialization_vector;
+String input;
+String encrypted="";
+System.out.println("Enter the key (10 bits): ");
+String key=sc.next();
+String permuted_key=permutation_key(key);
+String shifted_key=left_shift(permuted_key);
+String compressed_key=compress_key_to_8_bit(shifted_key);
+//// Left shift by 2 bits
+String shifted_key_2=left_shift(shifted_key);
+String shifted_key_2_bit=left_shift(shifted_key_2);
+String compressed_key_2=compress_key_to_8_bit(shifted_key_2_bit);
+for(int i=1;i<=number_of_blocks;i++)
+{
+block=input_text.substring(8*(i-1),8*i);
+input=xor_data_with_key(block,initialization_vector);
+String permuted_string=permutation_string(input);
+String split_input[]=divide_string_to_half(permuted_string);
+String expanded_input=expand_string(split_input[1]);
+System.out.println("\nENCRYPTION for Block["+i+"]\n");
+//////ROUND 1
+System.out.println("\nROUND 1");
+System.out.println("permuted_string: "+permuted_string);
+System.out.println("expanded_string: "+expanded_input);
+String
+xor_operate_data=xor_data_with_key(expanded_input,compressed_key);
+String after_xor_operation_data[]=two_halves_data(xor_operate_data);
+String substitution_first_half=substitution_s0(after_xor_operation_data[0]);
+String substitution_second_half=substitution_s1(after_xor_operation_data[1]);
+String
+after_p4_data=permutation_p4(substitution_first_half+substitution_second_half);
+System.out.println("permuted_key: "+permuted_key);
+System.out.println("compressed_key: "+compressed_key);
+//System.out.println("Shifted key: "+shifted_key);
+System.out.println("xor_operate_data: "+xor_operate_data);
+//System.out.println("substitution_first_half: "+substitution_first_half);
+//System.out.println("substitution_second_half: "+substitution_second_half);
+//System.out.println("after_p4_data: "+after_p4_data);
+String right_half=xor_data_with_key(after_p4_data,split_input[0]);
+String left_half=split_input[1];
+String swapped_string=left_half+right_half;
+//System.out.println("Swapped_string: "+swapped_string);
+//System.out.println("LEFT_HALF: "+left_half);
+//System.out.println("RIGHT_HALF: "+right_half);
+//////ROUND 2
+System.out.println("\nROUND 2");
+String split_input_2[]=divide_string_to_half(swapped_string);
+String expanded_input_2=expand_string(split_input_2[1]);
+String
+xor_operate_data_2=xor_data_with_key(expanded_input_2,compressed_key_2);
+String after_xor_operation_data_2[]=two_halves_data(xor_operate_data_2);
+String
+substitution_first_half_2=substitution_s0(after_xor_operation_data_2[0]);
+String
+substitution_second_half_2=substitution_s1(after_xor_operation_data_2[1]);
+String
+after_p4_data_2=permutation_p4(substitution_first_half_2+substitution_second_half_2
+);
+String left_half_2=xor_data_with_key(after_p4_data_2,split_input_2[0]);
+String right_half_2=split_input_2[1];
+String encrypted_string=permutation_inverse_string(left_half_2+right_half_2);
+//System.out.println("expanded_string: "+expanded_input_2);
+//System.out.println("split_string: "+split_input_2[0]+split_input_2[1]);
+System.out.println("compressed_key: "+compressed_key_2);
+//System.out.println("Shifted key: "+shifted_key_2);
+System.out.println("xor_operate_data: "+xor_operate_data_2);
+//System.out.println("substitution_first_half: "+substitution_first_half_2);
+//System.out.println("substitution_second_half:
+"+substitution_second_half_2);
+//System.out.println("after_p4_data: "+after_p4_data_2);
+//System.out.println("LEFT_HALF: "+left_half_2);
+//System.out.println("RIGHT_HALF: "+right_half_2);
+System.out.println("Encrypted_string: "+encrypted_string);
+encrypted=encrypted+encrypted_string;
+initialization_vector=encrypted_string;
+}
+System.out.println("FINAL ENCRYPTED STRING: "+encrypted);
+String plaintext="";
+for(int i=1;i<=number_of_blocks;i++)
+{
+String block_decryption=encrypted.substring(8*(i-1),8*i);
+System.out.println("\nDECRYPTION for Block["+i+"]");
+/////DECRYPTION
+String cipher_after_ip=permutation_string(block_decryption);
+///key 2 == compressed_key_2
+String split_input_decryption[]=divide_string_to_half(cipher_after_ip);
+String expanded_input_decryption=expand_string(split_input_decryption[1]);
+String
+xor_operate_data_decryption=xor_data_with_key(expanded_input_decryption,compres
+sed_key_2);
+String
+after_xor_operation_data_decryption[]=two_halves_data(xor_operate_data_decryption
+);
+String
+substitution_first_half_decryption=substitution_s0(after_xor_operation_data_decryptio
+n[0]);
+String
+substitution_second_half_decryption=substitution_s1(after_xor_operation_data_decryp
+tion[1]);
+String
+after_p4_data_decryption=permutation_p4(substitution_first_half_decryption+substitut
+ion_second_half_decryption);
+String
+left_half_decryption=xor_data_with_key(after_p4_data_decryption,split_input_decrypti
+on[0]);
+String right_half_decryption=split_input_decryption[1];
+String swapped_string_decryption=right_half_decryption+left_half_decryption;
+////ROUND 2
+String
+split_input_decryption_2[]=divide_string_to_half(swapped_string_decryption);
+String
+expanded_input_decryption_2=expand_string(split_input_decryption_2[1]);
+String
+xor_operate_data_decryption_2=xor_data_with_key(expanded_input_decryption_2,co
+mpressed_key);
+String
+after_xor_operation_data_decryption_2[]=two_halves_data(xor_operate_data_decrypti
+on_2);
+String
+substitution_first_half_decryption_2=substitution_s0(after_xor_operation_data_decrypt
+ion_2[0]);
+String
+substitution_second_half_decryption_2=substitution_s1(after_xor_operation_data_decr
+yption_2[1]);
+String
+after_p4_data_decryption_2=permutation_p4(substitution_first_half_decryption_2+sub
+stitution_second_half_decryption_2);
+String
+left_half_decryption_2=xor_data_with_key(after_p4_data_decryption_2,split_input_dec
+ryption_2[0]);
+String right_half_decryption_2=split_input_decryption_2[1];
+String
+decrypted=permutation_inverse_string(left_half_decryption_2+right_half_decryption_2)
+;
+System.out.println("\nDECRYPTED PLAINTEXT: "+decrypted);
+plaintext=plaintext+xor_data_with_key(decrypted,initialization_vector_decryption);
+initialization_vector_decryption=block_decryption;
+}
+System.out.println("FINAL PLAINTEXT: "+plaintext);
+}
+public static String permutation_string(String text)
+{
+String txt="";
+for(int i=0;i<ip.length;i++)
+{
+txt=txt+String.valueOf(text.charAt(ip[i]-1));
+}
+return txt;
+}
+public static String permutation_inverse_string(String text)
+{
+String txt="";
+for(int i=0;i<ip_inverse.length;i++)
+{
+txt=txt+String.valueOf(text.charAt(ip_inverse[i]-1));
+}
+return txt;
+}
+public static String permutation_key(String text)
+{
+String txt="";
+for(int i=0;i<p10.length;i++)
+{
+txt=txt+String.valueOf(text.charAt(p10[i]-1));
+}
+return txt;
+}
+public static String expand_string(String text)
+{
+String txt="";
+for(int i=0;i<ep.length;i++)
+{
+txt=txt+String.valueOf(text.charAt(ep[i]-1));
+}
+return txt;
+}
+public static String[] divide_string_to_half(String text)
+{
+String txt[]=new String[2];
+txt[0]=text.substring(0,(text.length()/2));
+txt[1]=text.substring((text.length()/2),text.length());
+return txt;
+}
+public static String xor_data_with_key(String data,String key)
+{
+String txt="";
+for(int i=0;i<data.length();i++)
+{
+if(data.charAt(i)!=key.charAt(i))
+txt=txt+"1";
+else
+txt=txt+"0";
+}
+return txt;
+}
+public static String left_shift(String key)
+{
+String txt;
+String first_half_key="";
+String second_half_key="";
+for(int i=1;i<key.length()/2;i++)
+first_half_key=first_half_key+String.valueOf(key.charAt(i));
+first_half_key=first_half_key+String.valueOf(key.charAt(0));
+for(int i=key.length()/2+1;i<key.length();i++)
+second_half_key=second_half_key+String.valueOf(key.charAt(i));
+second_half_key=second_half_key+String.valueOf(key.charAt(key.length()/2));
+txt=first_half_key+second_half_key;
+return txt;
+}
+public static String compress_key_to_8_bit(String text)
+{
+String txt="";
+for(int i=0;i<p8.length;i++)
+{
+txt=txt+String.valueOf(text.charAt(p8[i]-1));
+}
+return txt;
+}
+public static String[] two_halves_data(String text)
+{
+String txt[]=new String[2];
+txt[0]=text.substring(0,text.length()/2-1);
+txt[1]=text.substring(text.length()/2,text.length());
+return txt;
+}
+public static String substitution_s0(String text)
+{
+String txt="";
+int
+rowid=Integer.parseInt(String.valueOf(text.charAt(0))+String.valueOf(text.charAt(text.le
+ngth()-1)),2);
+int
+colid=Integer.parseInt(String.valueOf(text.charAt(1))+String.valueOf(text.charAt(2)),2);
+txt=s0[rowid][colid];
+return txt;
+}
+public static String substitution_s1(String text)
+{
+String txt="";
+int
+rowid=Integer.parseInt(String.valueOf(text.charAt(0))+String.valueOf(text.charAt(text.le
+ngth()-1)),2);
+int
+colid=Integer.parseInt(String.valueOf(text.charAt(1))+String.valueOf(text.charAt(2)),2);
+txt=s1[rowid][colid];
+return txt;
+}
+public static String permutation_p4(String text)
+{
+String txt="";
+for(int i=0;i<p4.length;i++)
+{
+txt=txt+String.valueOf(text.charAt(p4[i]-1));
+}
+return txt;
+}
+public static int ceiling_function(String text)
+{
+int ceil_value=0;
+if((text.length()%8)==0)
+{
+ceil_value=text.length()/8;
+}
+else
+{
+ceil_value=(text.length()/8)+1;
+}
+return ceil_value;
+}
+}
+/*
+OUTPUT:
+Enter the plaintext:
+10001000111100001010
+HOW MUCH PADDING: 4
+INPUT TEXT AFTER PADDING: 100010001111000010100000
+Enter the key (10 bits):
+1010101011
+ENCRYPTION for Block[1]
+ROUND 1
+permuted_string: 00000000
+expanded_string: 00000000
+permuted_key: 1101011100
+compressed_key: 11100110
+xor_operate_data: 11100110
+ROUND 2
+compressed_key: 01011011
+xor_operate_data: 11100101
+Encrypted_string: 10001111
+ENCRYPTION for Block[2]
+ROUND 1
+permuted_string: 11101111
+expanded_string: 11111111
+permuted_key: 1101011100
+compressed_key: 11100110
+xor_operate_data: 00011001
+ROUND 2
+compressed_key: 01011011
+xor_operate_data: 01110011
+Encrypted_string: 11100101
+ENCRYPTION for Block[3]
+ROUND 1
+permuted_string: 11000100
+expanded_string: 00101000
+permuted_key: 1101011100
+compressed_key: 11100110
+xor_operate_data: 11001110
+ROUND 2
+compressed_key: 01011011
+xor_operate_data: 01110011
+Encrypted_string: 00000101
+FINAL ENCRYPTED STRING: 100011111110010100000101
+DECRYPTION for Block[1]
+DECRYPTED PLAINTEXT: 00000000
+DECRYPTION for Block[2]
+DECRYPTED PLAINTEXT: 01111111
+DECRYPTION for Block[3]
+DECRYPTED PLAINTEXT: 01000101
+FINAL PLAINTEXT: 100010001111000010100000
+*/

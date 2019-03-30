@@ -1,0 +1,96 @@
+// This module has been designed for 256 bytes of image only
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.file.Files;
+import java.util.Random;
+import java.util.Scanner;
+ 
+public class RSAImage
+{
+    private BigInteger p;
+    private BigInteger q;
+    private BigInteger N;
+    private BigInteger phi;
+    private BigInteger e;
+    private BigInteger d;
+    private int        bitlength = 1024;
+    private Random     r;
+ 
+    public RSAImage()
+    {
+        r = new Random();
+        p = BigInteger.probablePrime(bitlength, r);
+        System.out.println("The value of p is : " + p);
+        q = BigInteger.probablePrime(bitlength, r);
+        System.out.println("The value of q is : " + q);
+        N = p.multiply(q);
+        System.out.println("The value of N is : " + N);
+        phi = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
+        System.out.println("The value of PHI is : " + phi);
+        e = BigInteger.probablePrime(bitlength / 2, r);
+        System.out.println("The value of E is : " + e);
+        while (phi.gcd(e).compareTo(BigInteger.ONE) > 0 && e.compareTo(phi) < 0)
+        {
+            e.add(BigInteger.ONE);
+        }
+        d = e.modInverse(phi);
+        System.out.println("The value of d is : " + d);
+    }
+ 
+    public RSAImage(BigInteger e, BigInteger d, BigInteger N)
+    {
+        this.e = e;
+        this.d = d;
+        this.N = N;
+    }
+ 
+    public static void main(String[] args) throws IOException
+    {
+        RSA rsa = new RSA();
+        Scanner sc = new Scanner(System.in);
+        String teststring;
+        File f = new File("C:\\Users\\cse\\Pictures\\test2.txt");
+        File des = new File("C:\\Users\\cse\\Pictures\\des.txt");
+        byte[] fileContent = Files.readAllBytes(f.toPath());
+        
+        System.out.println("Plaintext in Bytes: "
+                + bytesToString(fileContent));
+        // encrypt
+        byte[] encrypted = rsa.encrypt(fileContent);
+        System.out.println("Encrypted text : " + new String(encrypted));
+        // decrypt
+        byte[] decrypted = rsa.decrypt(encrypted);
+        System.out.println("Decrypting the ciphertext: " + bytesToString(decrypted));
+        System.out.println("Decrypted String: " + new String(decrypted));
+        
+        try(FileOutputStream stream = new FileOutputStream(des))
+        {
+            stream.write(fileContent);
+        }
+    }
+ 
+    private static String bytesToString(byte[] encrypted)
+    {
+        String test = "";
+        for (byte b : encrypted)
+        {
+            test += Byte.toString(b);
+        }
+        return test;
+    }
+ 
+    // Encrypt message
+    public byte[] encrypt(byte[] message)
+    {
+        return (new BigInteger(message)).modPow(e, N).toByteArray();
+    }
+ 
+    // Decrypt message
+    public byte[] decrypt(byte[] message)
+    {
+        return (new BigInteger(message)).modPow(d, N).toByteArray();
+    }
+}
