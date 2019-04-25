@@ -1,0 +1,250 @@
+
+Practical 7B
+
+import java.util.Scanner;
+
+public class Custom{
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Enter the Plain Text");
+        String plainText = sc.nextLine();
+        plainText = CeaserCipher.preprocess(plainText);
+        System.out.println("After Preprocess : " + plainText);
+        System.out.println("Enter the key");
+        int key = sc.nextInt();
+        String cipherText = CeaserCipher.Encrypt(plainText, key);
+        System.out.println("\nEncrypted Text : " + cipherText);
+        
+        
+         String text;
+        text = sc.nextLine();
+        int i=0;
+        
+        text = Trans.preprocess(cipherText);
+        
+        System.out.println("Enter key in Numeric form ");
+        String key2 = sc.nextLine();
+        
+        char cmat[][] = Trans.Encrypt(text,key2);
+        StringBuilder sb = new StringBuilder();
+        for(i=0;i<cmat.length;i++)
+        {
+            for(int j=0;j<cmat[0].length;j++)
+            {
+                sb.append(cmat[i][j]);
+            }
+        }
+        String firstEncrypt = sb.toString();
+        System.out.println("After First Transposition : " + firstEncrypt);
+        
+        char cmat1[][] = Trans.Encrypt(firstEncrypt,key2);
+        sb = new StringBuilder();
+        for(i=0;i<cmat1.length;i++)
+        {
+            for(int j=0;j<cmat1[0].length;j++)
+            {
+                sb.append(cmat1[i][j]);
+            }
+        }
+        String secondEncrypt = sb.toString();
+        System.out.println("After Second Transposition : " + secondEncrypt);
+        
+        
+         char demat[][] = Trans.decryptSingle(key2, cmat1);
+        System.out.println("");
+        char demat2[][] = Trans.decryptSingle(key2, cmat);
+        System.out.println("");
+        sb = new StringBuilder();
+        for(i=0;i<demat2.length;i++)
+        {
+            for(int j=0;j<demat2[0].length;j++)
+            {
+                sb.append(demat2[i][j]);
+            }
+        }
+        String decrypt = sb.toString();
+        System.out.println("After Decryption Transposition : " + decrypt);
+        
+        String dePlainText = CeaserCipher.Decrypt(decrypt, key);
+        System.out.println("\nDecrypted Text : " + dePlainText);
+    }
+
+}
+
+
+class CeaserCipher {
+     
+    static String preprocess(String plainText)
+    {
+        int i = 0;
+        char ch[] = plainText.toCharArray();
+        for(char c: ch )
+        {
+            if(Character.isUpperCase(c))
+            {
+                ch[i] = Character.toLowerCase(c);
+            }
+            if(!Character.isAlphabetic(c))
+            {
+                ch[i] = ' ';
+            }
+                
+            i++;
+        }
+        return new String(ch).replace(" ", "");
+    }
+    
+    static String Encrypt(String plainText, int key)
+    {
+        int i = 0;
+        char ch[] = plainText.toCharArray();
+        for(char c : ch)
+        {
+            if(Character.isAlphabetic(c))
+            {
+                ch[i] = (char) ((c - 'a' + key)%26 + 'a') ;
+            }
+            i++;
+        }
+        return new String(ch);
+    }
+    
+    static String Decrypt(String plainText, int key)
+    {
+        int i = 0;
+        char ch[] = plainText.toCharArray();
+        for(char c : ch)
+        {
+            if(Character.isAlphabetic(c))
+            {
+                if((c-'a'-key)<0)
+                   ch[i] = (char) ((c - 'a' - key + 26)%26 + 'a') ;
+                else
+                    ch[i] = (char) ((c - 'a' - key)%26 + 'a') ;
+            }
+            i++;
+        }
+        return new String(ch);
+    }
+}
+
+
+class Trans {
+    static Scanner sc = new Scanner(System.in);
+    
+    static char[][] Encrypt(String text,String key)
+    {
+        int i=0;
+       
+        String temp[] = key.split(" ");
+        int arrkey[] = new int[temp.length];
+        for(i=0;i < temp.length;i++)
+        {
+            arrkey[i] = Integer.parseInt(temp[i]);
+        }
+        key = key.replace(" ", "");
+
+        char c[] = text.toCharArray();
+        double tlen = text.length();
+        double klen = key.length();
+        int row = (int)Math.ceil(tlen/klen);
+        char mat[][] = new char[row][(int)klen];
+        int k=0;
+        for(i=0;i<mat.length;i++)
+        {
+            for(int j=0;j<mat[0].length;j++)
+            {
+                if(k<c.length)
+                    mat[i][j] = c[k];
+                else
+                    mat[i][j] = '*';
+                k++;
+            }
+            
+        }
+        char cmat[][] = new char[(int)klen][row];
+        
+        
+        for(i=0;i<cmat.length;i++)
+        {
+            for(int j=0;j<cmat[0].length;j++)
+            {
+                cmat[i][j] = mat[j][arrkey[i]-1];
+                
+            }
+        }
+        
+        return cmat;
+    }
+    
+    static String preprocess(String text)
+    {
+        char c[] = text.toCharArray();
+        int i=0;
+        for(char ch : c )
+        {
+            if(Character.isUpperCase(ch))
+                c[i] = Character.toLowerCase(ch);
+            i++;
+        }
+        text = new String(c);
+        text = text.replace(" ", "");
+        System.out.println(text);
+        return text;
+    }
+    
+     
+    static char[][] decryptSingle(String key,char cmat[][])
+    {
+        
+        String temp[] = key.split(" ");
+        int arrkey[] = new int[temp.length];
+        for(int i=0;i < temp.length;i++)
+        {
+            arrkey[i] = Integer.parseInt(temp[i]);
+        }
+        
+        
+         char demat[][] = new char[cmat[0].length][cmat.length];
+        
+        for(int i=0;i < demat.length;i++)
+        {
+            for(int j=0;j<demat[0].length;j++)
+            {
+                demat[i][arrkey[j]-1] = cmat[j][i];
+            }
+        }
+        
+        for(int i=0;i<demat.length;i++)
+        {
+            for(int j=0;j<demat[0].length;j++)
+            {
+                System.out.print(demat[i][j]);
+            }
+        }
+        
+        return demat;
+    }
+}
+
+
+
+Output : 
+Enter the Plain Text
+MadhurChhanganiMadhurChhangani
+After Preprocess : madhurchhanganimadhurchhangani
+Enter the key
+4
+
+Encrypted Text : qehlyvgllerkermqehlyvgllerkerm
+qehlyvgllerkermqehlyvgllerkerm
+Enter key in Numeric form 
+3 2 1 4 5
+After First Transposition : hlehleegkegkqvrqvrllrllryemyem
+After Second Transposition : egqrlylekvlmhegqrehkvlrelerlym
+hlehleegkegkqvrqvrllrllryemyem
+qehlyvgllerkermqehlyvgllerkerm
+After Decryption Transposition : qehlyvgllerkermqehlyvgllerkerm
+
+Decrypted Text : madhurchhanganimadhurchhangani
