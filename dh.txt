@@ -1,114 +1,356 @@
+import java.io.*;  
+import java.net.*;  
+import java.util.Arrays;
+import java.util.HashSet;
+//import java.util.Random;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeMap;
 
-
-public class AutoKey {
-    static Scanner sc = new Scanner(System.in);
-    static char grid[][] = new char[26][26];
-    public static void main(String[] args) {
-        System.out.println("Enter the Input");
-        String plainText = sc.nextLine();
-        plainText = preprocess(plainText);
-        System.out.println("After Preprocess : " + plainText);
-        System.out.println("\nEnter the Key");
-        String key = sc.next();
-        key = key.toLowerCase();
-        makeGrid();
-        System.out.println("\nEncrypted Message : ");
-        String cipherText = Encrypt(plainText, key);
-        System.out.println(cipherText);
-        System.out.println("\nDecryption Message : ");
-        System.out.println(Decrypt(cipherText, key));
-    }
-  
-    static String Encrypt(String plainText, String key)
-    {
-        String Encrypt = key + plainText;
-        char EncInChar[] = Encrypt.toCharArray();
-        char plainInChar[] = plainText.toCharArray();
-        char result[] = new char[plainInChar.length];
-        for(int i=0;i<plainInChar.length;i++)
-        {
-            result[i] = grid[plainInChar[i] - 'a'][EncInChar[i] - 'a'];
-        }
-        
-        return new String(result);
-    }
-    
-    static String Decrypt(String cipherText, String key)
-    {
-        char result[] = new char[cipherText.length()] ;
-        char cipher[] = cipherText.toCharArray();
-        String keyStrem = key;
-        char keyInChar[] = key.toCharArray();
-        
-        for(int i=0;i<cipher.length;i++)
-        {
-            for(int j = 0;j<26;j++)
-            {
-                if(grid[j][keyInChar[i] - 'a'] == cipher[i])
+public class DHClient {
+    static int p,g,ya,yb;
+    static private int xa;
+    public static void main(String[] args) 
+    {  
+        starting:    
+        while(true)
+        {          
+            try
+            {     
+                Socket s=new Socket("localhost",6666);                 
+                DataOutputStream dout=new DataOutputStream(s.getOutputStream()); 
+                DataInputStream dis=new DataInputStream(s.getInputStream());
+                System.out.println("Do you want to start Diffie-Hellman"
+                        + " Algorithm?\n(Write 'yes' or 'no')");
+                Scanner sc=new Scanner(System.in);
+                String str=sc.next();
+                dout.writeUTF(str);
+                String client=dis.readUTF();
+                System.out.println("Echo message received from server: "+client);
+                if(client.equalsIgnoreCase("ok"))
                 {
-                    result[i] = (char)(j + 'a');
-                    keyStrem = keyStrem + (char)(j + 'a') ;
+                    System.out.println("Closing this client....");
+                    Thread t =new Thread();
+                    t.sleep(2000);
+                    dout.flush();  
+                    dout.close();  
+                    s.close(); 
                     break;
                 }
-            }
-            keyInChar = keyStrem.toCharArray();
+                else
+                {
+                    System.out.println("---------------------------CLIENT--------------------------------");
+                    input();
+                    dout.writeInt(p);
+                    dout.writeInt(g);
+                    code();
+                    dout.writeInt(ya);
+                    yb = dis.readInt();
+                    System.out.println("Server's Yb :  "+yb);
+                    System.out.println("");
+                    key();
+                    dout.flush();  
+                    dout.close();  
+                    s.close(); 
+                    continue starting;
+                }                               
+            }           
+            catch(Exception e)
+            {
+                e.printStackTrace();
+            }  
         }
-        return new String(result);
+        
     }
     
-    static String preprocess(String plainText)
-    {
-        int i = 0;
-        char ch[] = plainText.toCharArray();
-        for(char c: ch )
+    static void input(){
+        Scanner sc = new Scanner(System.in);
+        System.out.println("----INPUT---");
+        do{
+            System.out.print("Enter Prime No P :- ");
+             p = sc.nextInt();
+        }while(primeTest(p)!=true);
+        
+        try
         {
-            if(Character.isUpperCase(c))
+            if(GetPrimitiveRoot(p)==true)
             {
-                ch[i] = Character.toLowerCase(c);
-            }
-            if(!Character.isAlphabetic(c))
-            {
-                ch[i] = ' ';
+                System.out.println("Greatest primitive root of P = "+p+" is G = "+ g);
             }
                 
-            i++;
+            //System.out.println("hi");
+            if(GetPrimitiveRoot(p)==false)
+            {
+                System.out.println("Dear user no primitive root\n"
+                        + "Hence,Select a prime No G such that 0<G<P");
+                g = sc.nextInt();
+                //System.out.println("Greatest primitive root of P = "+p+" is G = "+ g);
+            }
+            
         }
-        return new String(ch).replace(" ", "");
+        catch(Exception e)
+        {
+            
+        }
     }
     
-    static void makeGrid()
+    static void code(){
+        System.out.println("\n----------DIFFIE-HELLMAN KEY EXCHANGE--------------\n");
+            System.out.println("P : "+p);
+            System.out.println("G(biggest primitive root) : "+g);
+            System.out.println("");
+            
+            //Random rand = new Random(); 
+             //xa = rand.nextInt(10);
+            System.out.println("Enter Client's Secret no.(Xa) :- " );
+            xa = s.nextInt();
+            //System.out.println("Client's Random Number (Xa) :- " + xa);
+            System.out.println("");
+            
+            ya = (int) (Math.pow(g,xa) % p);
+            System.out.println("Client's Ya:  "+ya);
+            System.out.println("");
+            System.out.println("Waiting for server's response.......");
+        
+    }
+    static void key(){
+        int k1 = (int) (Math.pow(yb,xa) % p);
+            System.out.println("Client's Secret Key :: "+k1);
+    }
+    
+    static boolean primeTest(int num)
     {
-        char c[] = new char[26];
-        char ch = 'a';
-        for(int i=0;i<26;i++)
+        boolean flag = false;
+        for(int i = 2; i <= num/2; ++i)
         {
-            c[i] = ch;
-            ch++;
-        }
-        int m;
-        for(int i = 0;i<26;i++)
-        {
-            m = i;
-            for(int j = 0;j< 26;j++)
+            if(num % i == 0)
             {
-                grid[i][j] = c[m];
-                m = (m + 1)%26;
+                flag = true;
+                break;
+            }
+        }
+
+        if (!flag)
+            return true;
+        else
+            return false;
+    }
+    
+    static boolean GetPrimitiveRoot(int primeno)
+    {    
+        Integer distarr[] =new Integer[primeno-1];
+        TreeMap<Integer,Integer[]> checkedmatrix = new TreeMap<>();
+        for(int i=1;i<primeno;i++)
+        {
+            System.out.println("i= "+i);
+            for(int k=1;k<primeno;k++)
+            {
+                int temp=(int) (Math.pow(i,k) % primeno);
+                System.out.print(temp+" ");
+                distarr[k-1]=temp;
+            }
+            System.out.println("");
+            Integer[] temp=new Integer[primeno-1];
+            
+            //checkedmatrix.put(i,temp);
+            //System.out.println("");
+            if (areDistinct(distarr)&&primeTest(i))
+            {
+                System.out.println("\nDistinct array:-");
+                for(int j=0;j<distarr.length;j++)
+                {    
+                    System.out.print(distarr[j]+" ");
+                    temp[j]=distarr[j];
+
+                }  
+                checkedmatrix.put(i,temp);
+                System.out.println("\n");
             }
         }
         
-      
+        
+        /*for (Map.Entry<Integer,Integer[]> entry : checkedmatrix.entrySet())
+        {
+            System.out.println("Key = "+entry.getKey()+",Value = " + entry.getValue());            
+               
+        } */    
+        
+        //System.out.println("r  :"+g);
+        if(checkedmatrix.isEmpty())
+        {
+             return false;
+        }
+           
+        else
+        {
+            g=   checkedmatrix.lastKey();
+            return true;
+        }
+            
     }
     
-    static void printGrid()
-    {
-          for(int i = 0;i<26;i++)
+    public static boolean areDistinct(Integer arr[]) 
+    { 
+        // Put all array elements in a HashSet 
+        Set<Integer> s =  new HashSet<Integer>(Arrays.asList(arr)); 
+  
+        // If all elements are distinct, size of 
+        // HashSet should be same array. 
+        return (s.size() == arr.length); 
+    } 
+}  
+/*
+Do you want to start Diffie-Hellman Algorithm?
+(Write 'yes' or 'no')
+yes
+Echo message received from server: Lets Start!!!
+---------------------------CLIENT--------------------------------
+----INPUT---
+Enter Prime No P :- 71
+Enter Prime No G less than P :- 67
+
+----------DIFFIE-HELLMAN KEY EXCHANGE--------------
+
+P : 71
+G : 67
+
+Client's Random Number (Xa) :- 0
+
+Client's Ya:  1
+
+Server's Yb :  67
+
+Client's Secret Key :: 1
+Do you want to start Diffie-Hellman Algorithm?
+(Write 'yes' or 'no')
+no
+Echo message received from server: ok
+Closing this client....
+*/
+
+import java.io.*;  
+import java.net.*;  
+import java.util.Scanner;
+
+public class DHServer 
+{  
+    static Scanner s = new Scanner(System.in);
+    static int p,g,ya,yb;
+    static private int xb;
+    public static void main(String[] args)
+    {  
+        starting:
+        while(true)
         {
-            for(int j = 0;j< 26;j++)
-            {
-                System.out.print(grid[i][j] + "  ");
+            try
+            {  
+                System.out.println("---------------------------SERVER--------------------------------");
+                ServerSocket ss=new ServerSocket(6666);
+                System.out.println("Waiting for Client...");
+                Socket s=ss.accept();
+                System.out.println("Connection established...");
+
+                DataInputStream dis=new DataInputStream(s.getInputStream());
+                DataOutputStream dout=new DataOutputStream(s.getOutputStream());
+                String clientmessage=dis.readUTF();
+                System.out.println("Message received from client: "+clientmessage);
+                
+                if(clientmessage.equalsIgnoreCase("no"))
+                {
+                    System.out.println("Exiting Message sending to client!!! ");
+                    dout.writeUTF("ok");
+                    Thread t =new Thread();
+                    t.sleep(2000);
+                    s.close();  
+                    break;
+                }
+                
+                if(!clientmessage.equalsIgnoreCase("no"))
+                {
+                    String servermessage="Lets Start!!!";
+                    System.out.println(servermessage);
+                    dout.writeUTF(servermessage);
+                    p = dis.readInt();
+                    g = dis.readInt();
+                    ya = dis.readInt();
+                    code();
+
+                    System.out.println("Client's Ya :  "+ya);
+                    key();
+                    System.out.println("");
+                    dout.writeInt(yb);
+                    dout.flush();  
+                    dout.close();  
+                    s.close();
+                    ss.close();
+                   // break;
+                    continue starting;
+                }
+                
+                
             }
-            System.out.println("");
+            catch(Exception e)
+            {
+                System.out.println(e);
+            }  
         }
+        
+    }  
+    
+    static void code()
+    {
+        System.out.println("\n----------DIFFIE-HELLMAN KEY EXCHANGE--------------\n");
+        System.out.println("P :- "+p);
+        System.out.println("G :- "+g);
+        System.out.println("");
+
+
+        //Random rand = new Random(); 
+        //rand.nextInt(10);
+        System.out.println("Enter Server's Secret no.(Xb) :- " );
+        xb = s.nextInt();
+        //System.out.println("Server's Random Number (Xb) :- " + xb);
+        
+        System.out.println("");
+
+         yb = (int) (Math.pow(g,xb) % p);
+        System.out.println("Server's Yb:  "+yb);
+        System.out.println("");
+        
     }
-}
+    static void key()
+    {
+        int k2 = (int) (Math.pow(ya,xb) % p);
+        System.out.println("Server's Secret Key :: "+k2);
+        System.out.println("");
+    }
+}  
+/*
+run:
+---------------------------SERVER--------------------------------
+Waiting for Client...
+Connection established...
+Message received from client: yes
+Lets Start!!!
+
+----------DIFFIE-HELLMAN KEY EXCHANGE--------------
+
+P :- 71
+G :- 67
+
+Server's Random Number (Xb) :- 1
+
+Server's Yb:  67
+
+Client's Ya :  1
+Server's Secret Key :: 1
+
+
+---------------------------SERVER--------------------------------
+Waiting for Client...
+Connection established...
+Message received from client: no
+Exiting Message sending to client!!! 
+
+*/
+
